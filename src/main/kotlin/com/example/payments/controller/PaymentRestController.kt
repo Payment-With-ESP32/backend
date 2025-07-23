@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/payment")
+@RequestMapping("/api/payment")
 @CrossOrigin(origins = ["null", "none", "http://localhost:5173"])
 class PaymentRestController(
     private val paymentService: PaymentService,

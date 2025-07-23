@@ -5,7 +5,7 @@ import com.example.payments.service.ESP32MappingService
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/esp32")
+@RequestMapping("/api/esp32")
 @CrossOrigin(origins = ["null", "none", "http://localhost:5173"])
 class ESP32RestController(
     private val esp32MappingService: ESP32MappingService
