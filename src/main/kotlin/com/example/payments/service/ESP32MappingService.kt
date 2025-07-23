@@ -3,6 +3,7 @@ package com.example.payments.service
 import com.example.payments.config.ESP32ConnectionPoolCache
 import com.example.payments.dto.esp32.ESP32UpsertNodeRequestDto
 import com.example.payments.dto.esp32.ESP32GetAllResponseDto
+import com.example.payments.dto.esp32.ESP32GetMasterResponseDto
 import com.example.payments.`object`.ESP32PositionDetail
 import org.springframework.stereotype.Service
 
@@ -29,11 +30,17 @@ class ESP32MappingService(
         esp32ConnectionCache.upsertSlave(updateRequest.macAddress, detail)
     }
 
-    fun changeMaster(macAddress: String) {
-        esp32ConnectionCache.changeMaster(macAddress)
+    fun upsertMaster(macAddress: String) {
+        esp32ConnectionCache.upsertMaster(macAddress)
     }
+
+    fun getMaster(): ESP32GetMasterResponseDto = ESP32GetMasterResponseDto(esp32ConnectionCache.getMaster())
 
     fun changeNode(fromMac: String, toMac: String) {
         esp32ConnectionCache.changeModule(fromMac, toMac);
+    }
+
+    fun preLongOrDenyNode(macAddress: String, time: Int) {
+        esp32ConnectionCache.sendPreLongServiceTime(macAddress, time)
     }
 }

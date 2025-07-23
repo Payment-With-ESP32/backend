@@ -67,50 +67,45 @@ class ESP32ConnectionPoolCache(
     }
 
     fun getSlaves(): List<ESP32Position> = slaveMacs.toList()
+    fun getMaster(): String = masterMac
     fun upsertSlave(macAddress: String, position: ESP32PositionDetail) {
         val module = slaveMacs.find { it.macAddress == macAddress }
         if (module != null) {
             module.position = position
         } else {
             slaveMacs.add(ESP32Position(macAddress, position))
-            sendAddModuleCommand(macAddress)
+            val addCommand = "[ADD]$macAddress"
+            serialCommManager.send(addCommand)
         }
     }
     fun changeModule(prevMacAddress: String, upcomingMacAddress: String) {
-        println("$prevMacAddress $upcomingMacAddress");
         val prevModule = slaveMacs.find { it.macAddress == prevMacAddress }
-        println(prevModule)
         if (prevModule != null) {
             deleteSlave(prevModule.macAddress)
             upsertSlave(upcomingMacAddress, prevModule.position)
-            sendChangeModuleCommand(prevModule.macAddress, upcomingMacAddress)
+            val swapCommand = "[SWAP]$prevMacAddress/$upcomingMacAddress"
+            serialCommManager.send(swapCommand)
         }
     }
-    fun changeMaster(macAddress: String) {
+    fun upsertMaster(macAddress: String) {
         masterMac = macAddress
-        sendInitModuleCommand()
+        val connectCommand = "[INIT]${slaveMacs.joinToString(",") { it.macAddress }}"
+        serialCommManager.send(connectCommand)
     }
     fun deleteSlave(macAddress: String) {
         val dummy = ESP32Position(macAddress.trim(), ESP32PositionDetail())
         slaveMacs.remove(dummy)
-        sendDeleteModuleCommand(macAddress)
-    }
-
-    private fun sendInitModuleCommand() {
-        val connectCommand = "[INIT]${slaveMacs.joinToString(",") { it.macAddress }}"
-        serialCommManager.send(connectCommand)
-    }
-    private fun sendChangeModuleCommand(prevMacAddress: String, upcomingMacAddress: String) {
-        val swapCommand = "[SWAP]${prevMacAddress}/${upcomingMacAddress}"
-        serialCommManager.send(swapCommand)
-    }
-    private fun sendDeleteModuleCommand(macAddress: String) {
-        val delCommand = "[DEL]${macAddress}"
+        val delCommand = "[DEL]$macAddress"
         serialCommManager.send(delCommand)
     }
-    private fun sendAddModuleCommand(macAddress: String) {
-        val addCommand = "[ADD]${macAddress}"
-        serialCommManager.send(addCommand)
+    fun sendPreLongServiceTime(macAddress: String, time: Int) {
+        val preLongCommand = "[PREL]" + when (time) {
+            -1 -> "OFF"
+            0 -> "ON/0"
+            else -> "ON/$time"
+        }
+        serialCommManager.send(preLongCommand)
+        println(preLongCommand)
     }
 }
 

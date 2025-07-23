@@ -1,9 +1,6 @@
 package com.example.payments.controller;
 
-import com.example.payments.dto.esp32.ESP32ChangeNodeRequestDto
-import com.example.payments.dto.esp32.ESP32GetAllResponseDto
-import com.example.payments.dto.esp32.ESP32UpsertMasterNodeRequestDto
-import com.example.payments.dto.esp32.ESP32UpsertNodeRequestDto
+import com.example.payments.dto.esp32.*
 import com.example.payments.service.ESP32MappingService
 import org.springframework.web.bind.annotation.*
 
@@ -13,9 +10,20 @@ import org.springframework.web.bind.annotation.*
 class ESP32RestController(
     private val esp32MappingService: ESP32MappingService
 ) {
-    @GetMapping
+    @GetMapping("/slaves")
     fun getAllSubNodes(): ESP32GetAllResponseDto {
         return esp32MappingService.getNodes()
+    }
+
+    @GetMapping("/master")
+    fun getMasterNodeInfo(): ESP32GetMasterResponseDto {
+        return esp32MappingService.getMaster()
+    }
+
+    @PostMapping("/master")
+    @PutMapping("/master")
+    fun changeMasterNode(@RequestBody changeDto: ESP32UpsertMasterRequestDto) {
+        return esp32MappingService.upsertMaster(changeDto.toMac)
     }
 
     @PostMapping
@@ -25,12 +33,13 @@ class ESP32RestController(
 
     @DeleteMapping("/{mac}")
     fun deleteSubNode(@PathVariable mac: String) {
-        esp32MappingService.delNode(mac)
+        val parsedMac = mac.replace("-", ":")
+        esp32MappingService.delNode(parsedMac)
     }
 
     @PutMapping("/master")
     fun changeMasterNode(@RequestBody changeDto: ESP32UpsertMasterNodeRequestDto) {
-        esp32MappingService.changeMaster(changeDto.macAddress)
+        esp32MappingService.upsertMaster(changeDto.macAddress)
     }
 
     @PatchMapping
@@ -43,6 +52,16 @@ class ESP32RestController(
         @PathVariable fromMac: String,
         @RequestBody changeDto: ESP32ChangeNodeRequestDto
     ) {
-        esp32MappingService.changeNode(fromMac, changeDto.toMac)
+        val parsedMac = fromMac.replace("-", ":")
+        esp32MappingService.changeNode(parsedMac, changeDto.toMac)
+    }
+
+    @PostMapping("/{mac}")
+    fun preLongOrDenyNode(
+        @PathVariable mac: String,
+        @RequestBody preLongDto: ESP32PreLongRequestDto
+    ) {
+        val parsedMac = mac.replace("-", ":")
+        esp32MappingService.preLongOrDenyNode(parsedMac, preLongDto.time)
     }
 }
