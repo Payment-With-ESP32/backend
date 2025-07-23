@@ -1,0 +1,4 @@
+data:
+  esp32:
+    baud-rate: ${UART_BAUD_RATE:115200}
+    port: ${UART_PORT:COM3}

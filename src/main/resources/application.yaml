@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: payments
+
+  config:
+    import:
+      - "classpath:/portone-key.yaml"
+      - "classpath:/esp32-uart.yaml"
+      - "classpath:/database.yaml"

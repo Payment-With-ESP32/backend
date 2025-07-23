@@ -38,3 +38,6 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+ESP32Position.json
+*.db
