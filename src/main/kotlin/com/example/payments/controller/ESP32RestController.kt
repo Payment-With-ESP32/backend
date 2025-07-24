@@ -2,7 +2,12 @@ package com.example.payments.controller;
 
 import com.example.payments.dto.esp32.*
 import com.example.payments.service.ESP32MappingService
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
+import java.io.File
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 @RestController
 @RequestMapping("/api/esp32")
@@ -10,6 +15,9 @@ import org.springframework.web.bind.annotation.*
 class ESP32RestController(
     private val esp32MappingService: ESP32MappingService
 ) {
+    private final val uploadDir: String = "D:\\payment-system\\backend\\uploads\\"
+    private final val fileRegex = Regex("(?i).*\\.(?:jpg|jpeg|png|webp)$")
+
     @GetMapping("/slaves")
     fun getAllSubNodes(): ESP32GetAllResponseDto {
         return esp32MappingService.getNodes()
@@ -33,8 +41,7 @@ class ESP32RestController(
 
     @DeleteMapping("/{mac}")
     fun deleteSubNode(@PathVariable mac: String) {
-        val parsedMac = mac.replace("-", ":")
-        esp32MappingService.delNode(parsedMac)
+        esp32MappingService.delNode(mac)
     }
 
     @PutMapping("/master")
@@ -52,8 +59,7 @@ class ESP32RestController(
         @PathVariable fromMac: String,
         @RequestBody changeDto: ESP32ChangeNodeRequestDto
     ) {
-        val parsedMac = fromMac.replace("-", ":")
-        esp32MappingService.changeNode(parsedMac, changeDto.toMac)
+        esp32MappingService.changeNode(fromMac, changeDto.toMac)
     }
 
     @PostMapping("/{mac}")
@@ -61,7 +67,35 @@ class ESP32RestController(
         @PathVariable mac: String,
         @RequestBody preLongDto: ESP32PreLongRequestDto
     ) {
-        val parsedMac = mac.replace("-", ":")
-        esp32MappingService.preLongOrDenyNode(parsedMac, preLongDto.time)
+        esp32MappingService.preLongOrDenyNode(mac, preLongDto.time)
+    }
+
+    @GetMapping("/images")
+    fun getImageList(): List<String> {
+        val dir = File(uploadDir)
+        if (!dir.exists()) return emptyList()
+
+        val fileList = dir.list()?.filter { it.matches(fileRegex) }
+        if (fileList == null) return emptyList()
+        return fileList
+    }
+
+    @PostMapping("/image")
+    fun uploadImage(@RequestParam("file") file: MultipartFile) {
+        val dir = File(uploadDir)
+        if (!dir.exists()) dir.mkdirs()
+
+        val targetFile = File(uploadDir + file.originalFilename.toString())
+        file.transferTo(targetFile)
+    }
+
+    @DeleteMapping("/image/{filename}")
+    fun deleteImage(@PathVariable filename: String): ResponseEntity<Any> {
+        val file = File(uploadDir + URLDecoder.decode(filename, StandardCharsets.UTF_8))
+        if (file.exists()) {
+            file.delete()
+            return ResponseEntity.noContent().build()
+        }
+        return ResponseEntity.notFound().build()
     }
 }
