@@ -41,3 +41,9 @@ out/
 
 ESP32Position.json
 *.db
+
+uploads/**
+password/**
+**/static/**
+
+!**/**/.gitinclude
