@@ -1,11 +1,17 @@
 package com.example.payments.controller
 
+import org.springframework.boot.web.servlet.error.ErrorController
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestMethod
 
 @Controller
-class FrontendServeController {
-    @RequestMapping(value = ["/{path:^(?!api)(?!.*\\.).*$}"], method = [RequestMethod.GET])
-    fun mainHtml() = "index.html"
+class FrontendServeController: ErrorController {
+    companion object {
+        const val PATH = "/error"
+    }
+
+    @RequestMapping(PATH)
+    fun handleError(): String = "forward:/index.html"
+
+    fun getErrorPath(): String = PATH
 }
