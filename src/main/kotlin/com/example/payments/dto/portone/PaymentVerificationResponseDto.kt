@@ -15,7 +15,7 @@ data class PaymentVerificationResponseDto(
     val currency: String,
     val paidAt: String,
     val receiptUrl: String,
-    var macAddress: String
+    var macAddress: String? = ""
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
