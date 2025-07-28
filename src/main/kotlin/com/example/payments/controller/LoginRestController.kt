@@ -17,7 +17,7 @@ class LoginRestController(
         = if (loginService.login(dto)) ResponseEntity.ok().build() else ResponseEntity.badRequest().build()
 
     @PatchMapping
-    fun changePassword(dto: ChangePasswordRequestDto): ResponseEntity<Any>
+    fun changePassword(@RequestBody dto: ChangePasswordRequestDto): ResponseEntity<Any>
             = if (loginService.changePassword(dto)) ResponseEntity.ok().build() else ResponseEntity.badRequest().build()
 
 }
