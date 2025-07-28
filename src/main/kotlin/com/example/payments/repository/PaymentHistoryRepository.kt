@@ -6,16 +6,16 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.Instant
 
 interface PaymentHistoryRepository : JpaRepository<PaymentHistory, Long> {
-    fun findByImpUid(impUid: String): PaymentHistory?
-    fun findByMerchantUid(merchantUid: String): PaymentHistory?
+    fun findByPaymentId(paymentId: String): PaymentHistory?
 
     @Modifying
     @Transactional
-    @Query("UPDATE PaymentHistory p set p.impUid = :impUid WHERE p.merchantUid = :merchantUid")
-    fun updateImpUidByMerchantUid(
-        @Param("merchantUid") merchantUid: String,
-        @Param("impUid") impUid: String
+    @Query("UPDATE PaymentHistory p set p.succeedAt = :now WHERE p.paymentId = :paymentId")
+    fun updatePurchaseTimeByPaymentId(
+        @Param("paymentId") paymentId: String,
+        @Param("now") now: Instant
     ): Int
 }

@@ -6,6 +6,5 @@ import lombok.ToString
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PaymentCompleteRequestDto(
-    val impUid: String = "",
-    val merchantUid: String = ""
+    val paymentId: String = ""
 )

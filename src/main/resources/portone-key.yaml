@@ -2,3 +2,4 @@ data:
   portone:
     api-key: ${PORTONE_API_KEY}
     api-secret: ${PORTONE_API_SECRET}
+    api-v2-secret: ${PORTONE_API_V2_SECRET}

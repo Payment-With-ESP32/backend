@@ -4,11 +4,12 @@ import lombok.ToString
 
 @ToString
 data class PaymentRequestedDto(
-    val merchantUid: String = "",
+    val paymentId: String = "",
     val amount: Long = 0,
     val macAddr: String
 ) {
     init {
-        require(macAddr.length == 17) { "MAC 주소의 값은 17이어야 합니다. 2*6+5" }
+        val macRegex = Regex("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")
+        require(macRegex.matches(macAddr.trim())) { "mac 정규식에 맞지 않습니다." }
     }
 }
