@@ -7,10 +7,14 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
+import org.hibernate.jdbc.Expectation.None
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.File
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 import kotlin.collections.HashSet
 import kotlin.concurrent.thread
 
@@ -24,6 +28,7 @@ class ESP32ConnectionPoolCache(
     }
     private lateinit var masterMac: String
     private var slaveMacs: MutableSet<ESP32Position> = HashSet()
+    private val timeMap = ConcurrentHashMap<String, LinkedBlockingQueue<Long>>()
 
     @PostConstruct
     fun init() {
@@ -45,6 +50,14 @@ class ESP32ConnectionPoolCache(
                         when (commands[0]) {
                             "MAC" -> {
                                 if (masterMac != commands[1]) masterMac = commands[1].trim().lowercase()
+                            }
+                            "TIME" -> {
+                                val timeParts = commands[1].split(",")
+                                if (timeParts.size == 2) {
+                                    val mac = timeParts[0].trim().lowercase()
+                                    val time = timeParts[1].toLong()
+                                    timeMap.computeIfAbsent(mac) { LinkedBlockingQueue() }.put(time)
+                                }
                             }
                             else -> {}
                         }
@@ -107,15 +120,25 @@ class ESP32ConnectionPoolCache(
         val delCommand = "[DEL]$macAddress"
         serialCommManager.send(delCommand)
     }
-    fun sendPreLongServiceTime(macAddress: String, time: Int) {
+    fun sendPreLongServiceTime(macAddress: String, time: Long) {
+        val loweredMacAddress = macAddress.trim().lowercase()
+        val preLongCommand = "[PREL]$loweredMacAddress/${ if (time >= 0) time else -1 }"
+        serialCommManager.send(preLongCommand)
+    }
+
+    fun transferTime(from: String, to: String, time: Long) {
+        sendPreLongServiceTime(from, -1)
+        sendPreLongServiceTime(to, time)
+    }
+
+    fun getLeftTime(macAddress: String): Long?  {
         val loweredMacAddress = macAddress.trim().lowercase()
 
-        val preLongCommand = "[PREL]$loweredMacAddress/" + when (time) {
-            -1 -> "OFF"
-            0 -> "ON/0"
-            else -> "ON/$time"
-        }
-        serialCommManager.send(preLongCommand)
+        val getTimeCommand = "[TIME]$loweredMacAddress"
+        serialCommManager.send(getTimeCommand)
+
+        val queue = timeMap.computeIfAbsent(macAddress.lowercase()) { LinkedBlockingQueue() }
+        return queue.poll(3, TimeUnit.MINUTES)
     }
 }
 

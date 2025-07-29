@@ -4,6 +4,7 @@ import com.example.payments.config.ESP32ConnectionPoolCache
 import com.example.payments.dto.esp32.ESP32UpsertNodeRequestDto
 import com.example.payments.dto.esp32.ESP32GetAllResponseDto
 import com.example.payments.dto.esp32.ESP32GetMasterResponseDto
+import com.example.payments.dto.esp32.ESP32TransferTimeRequestDto
 import com.example.payments.`object`.ESP32PositionDetail
 import org.springframework.stereotype.Service
 
@@ -40,7 +41,13 @@ class ESP32MappingService(
         esp32ConnectionCache.changeModule(fromMac, toMac);
     }
 
-    fun preLongOrDenyNode(macAddress: String, time: Int) {
-        esp32ConnectionCache.sendPreLongServiceTime(macAddress, time)
+    fun preLongOrDenyNode(macAddress: String, time: Long) {
+        esp32ConnectionCache.sendPreLongServiceTime(macAddress, time * 60L * 1000L)
+    }
+
+    fun transferTime(transferDto: ESP32TransferTimeRequestDto) {
+        esp32ConnectionCache.getLeftTime(transferDto.from)
+            ?.takeIf { it >= 0 }
+            ?.let { esp32ConnectionCache.transferTime(transferDto.from, transferDto.to, it)}
     }
 }

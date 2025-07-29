@@ -155,6 +155,7 @@ class JSerialCommManager(
             if (fullLine.startsWith("[ESP]")) {
                 val payload = fullLine.substring("[ESP]".length)
                 if (payload.startsWith("MAC/")) messageQueue.push(payload.trim())
+                else if (payload.startsWith("TIME/")) messageQueue.push(payload.trim())
 
                 println(fullLine)
             }
